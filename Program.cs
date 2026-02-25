@@ -4,7 +4,7 @@ namespace KontorNord
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static void Main(string[] args) // Jeg har lagt dette While-Loop i Main, da Main skal kunne styre hele programmet inde i sig selv. Kig på det som programmets "liv" eller livscyklus"
         {
 
             bool isRunning = true;
@@ -12,7 +12,7 @@ namespace KontorNord
             while (isRunning)
             {
 				Console.ForegroundColor = ConsoleColor.Green;
-				Console.WriteLine("===== Welcome, {workerID} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op
+				Console.WriteLine("===== Welcome, {workerID} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
 				Console.ResetColor();
 				Console.WriteLine(""); // Lidt spacing
 
@@ -43,6 +43,7 @@ namespace KontorNord
                     default:
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Please input a valid number (1-4)");
+                        Console.ResetColor();
                         Console.ReadKey(true); // Betyder: "Hvis ikke denne tast i consollen"
                         Console.Clear(); // Rydder fejl-beskeden ved fejl-input
                         break;
@@ -62,7 +63,7 @@ namespace KontorNord
         {
             Console.Clear(); // Intern C# Metode, der sletter alt fra det forrige trin
 
-            Console.WriteLine("Menu is coming... soonTM");
+            Console.WriteLine("Stuff is coming... soonTM");
             Console.WriteLine("");
             Console.WriteLine("");
 
