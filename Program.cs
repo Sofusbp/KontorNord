@@ -8,7 +8,7 @@
             string name = "";
             bool isValidLogin = false;
 
-            while (!isValidLogin)
+            while (!isValidLogin) // Så længe der ikke kommer et "ValidLogin" kører loopet videre og brugeren kan forsøge igen.
             {
                 Console.Clear();
                 Console.WriteLine("=========================");
@@ -21,7 +21,7 @@
                 workerID = Console.ReadLine();
 
 
-
+                // Selve WorkerID godkendelsen - der er brugt de to første initialer i fornavn og et inital i efternavn
                 if (workerID == "SOM")
                 {
                     name = "Sofie Møller";
@@ -60,7 +60,7 @@
                     Console.ReadLine(); 
                 }
             }
-           
+           // Name fra tidligere kaldes herned og så vises det fulde navn i velkomst menuen.
             Console.Clear();
             Console.WriteLine("=========================");
             Console.WriteLine($"VELKOMMEN {name}");
