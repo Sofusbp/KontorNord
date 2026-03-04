@@ -76,9 +76,14 @@ namespace KontorNord
         {
 			Console.Clear(); // Intern C# Metode, der sletter alt fra det forrige trin
 
-			Console.WriteLine("You can book meetings... soonTM");
-			Console.WriteLine("");
-			Console.WriteLine("");
+			string day = SelectDay();
+			string startTime = SelectStartTime();
+			string endTime = SelectEndTime();
+			List<string> participants = AddParticipants();
+			string note = AddNote();
+
+			// I slutningen skal jeg lave en: "Møde er nu booked"
+			// Kalder så: MødeBekræftelse()
 
 			Console.ForegroundColor = ConsoleColor.Blue;
 			returnToMenu(); // Her kalder vi på Return-Metoden, der får brugeren tilbage til Menu (showMenu)
