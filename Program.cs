@@ -14,17 +14,21 @@ namespace KontorNord
             while (!isValidLogin) // Så længe der ikke kommer et "ValidLogin" kører loopet videre og brugeren kan forsøge igen.
             {
                 Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("=========================");
                 Console.WriteLine("KONTOR NORD BOOKINGSYSTEM");
                 Console.WriteLine("=========================");
                 Console.WriteLine("");
                 Console.WriteLine("");
+                Console.ResetColor();
 
                 Console.WriteLine("Indtast dit medarbejder ID for at begynde: ");
                 workerID = Console.ReadLine();
 
 
-                // Selve WorkerID godkendelsen - der er brugt de to første initialer i fornavn og et inital i efternavn
+                // Selve WorkerID godkendelsen - der er brugt de to første initialer i fornavn og et inital i efternavn.
+                // Adgangskoden er lavet omvendt af WorkerID - så de samme initialer blot baglæns. 
+                // Hvis WorkerID er korrekt vil den spørge om en adgangskode og hvis den også er korrekt kommer man videre ind til velkommen. Hvis ikke koden eller workerid er korrekt, kan man prøve igen.
                 if (workerID == "SOM")
                 {
                     name = "Sofie Møller";
@@ -93,10 +97,14 @@ namespace KontorNord
                 }
                 else
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine();
                     Console.WriteLine("Ugyldigt medarbejder ID!");
+                    Console.ResetColor();
                     Console.WriteLine("Tryk på en tast for at prøve igen...");
-                    Console.ReadLine(); 
+                    Console.ReadLine();
+                    Console.Clear();
+                    continue;
                 }
                 if (!isValidLogin)
                 {
@@ -108,11 +116,13 @@ namespace KontorNord
             }
            // Name fra tidligere kaldes herned og så vises det fulde navn i velkomst menuen.
             Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("=========================");
             Console.WriteLine($"VELKOMMEN {name}");
             Console.WriteLine("=========================");
             Console.WriteLine("");
             Console.WriteLine("Tryk på en tast for at komme ind i menuen");
+            Console.ResetColor();
             Console.ReadLine();
         }
     }
