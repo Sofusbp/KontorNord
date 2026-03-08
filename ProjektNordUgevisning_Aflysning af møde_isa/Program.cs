@@ -6,10 +6,14 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 	using System.Collections.Generic; // for List<>
 	using System.Globalization; // til ISOWeek
 	using System.Linq; // for Where, OrderBy, FirstOrDefault
-	using System.Security.Cryptography.X509Certificates;
+	using System.IO; // for File I/O hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
+	using System.Text.Json; // for JSON serialization hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
+
 
 	internal class Program
 	{
+		static string filePath = "meetings.json"; // filsti for hvor møderne skal gemmes. Vi gemmer møderne i en JSON-fil i samme mappe som programmet, så det er nemt at finde. 
+
 		static void Main(string[] args)
 		{
 			Console.ResetColor();
@@ -17,7 +21,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			Console.Title = "♥ Bookingsystem - KontorNord ♥"; // Titel på konsol-vinduet <3 ELSKER
 
 			int width = Math.Min(150, Console.LargestWindowWidth);
-			int height = Console.LargestWindowHeight - 4;
+			int height = Console.LargestWindowHeight - 2;
 
 			Console.SetBufferSize(width, height);
 			Console.SetWindowSize(width, height);
@@ -26,7 +30,18 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			int isoYear = ISOWeek.GetYear(today); // ISO-året kan være forskelligt fra kalenderåret i de første og sidste uger af året
 			int isoWeek = ISOWeek.GetWeekOfYear(today); // ISO-ugenummeret for dagens dato
 
-			List<Meeting> meetings = new List<Meeting>();
+			List<Meeting> meetings = LoadMeetings();
+
+			// Liste med fast definerede mødelokaler som brugeren kan bladre mellem i ugevisningen
+			List<MeetingRoom> rooms = new List<MeetingRoom>
+			{
+				new MeetingRoom(1, "A", 4),
+				new MeetingRoom(2, "B", 6),
+				new MeetingRoom(3, "C", 8),
+
+			};
+
+			int selectedRoomIndex = 0; // hvilket lokale der aktuelt er valgt i visningen. Vi starter med første lokale i listen.
 
 			Console.WriteLine();
 			PrintMenu();
@@ -40,16 +55,18 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 				PrintMenu();
 				Console.WriteLine();
 
+				MeetingRoom selectedRoom = rooms[selectedRoomIndex]; // det lokale brugeren lige nu kigger på i ugevisningen
+
 				// Filtrer og sorter møder
 				List<Meeting> weekMeetings = meetings
-					.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek)
+					.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek && m.RoomId == selectedRoom.Id)
 					.OrderBy(m => m.IsoDay)
 					.ThenBy(m => m.StartHour)
 					.ToList();
 
 
 				// vis ugegrid 
-				DrawWeek(isoYear, isoWeek, weekMeetings);
+				DrawWeek(isoYear, isoWeek, weekMeetings, selectedRoom);
 
 
 
@@ -71,16 +88,47 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 							break;
 						}
 
+					case ConsoleKey.UpArrow:
+						{
+							selectedRoomIndex--;
+							if (selectedRoomIndex < 0)
+								selectedRoomIndex = rooms.Count - 1;
+							break;
+						}
+
+					case ConsoleKey.DownArrow:
+						{
+							selectedRoomIndex++;
+							if (selectedRoomIndex >= rooms.Count)
+								selectedRoomIndex = 0;
+							break;
+						}
+
 					case ConsoleKey.N:
 						{
-							meetings.Add(Meeting.CreateFromUserInput(isoYear, isoWeek));
+							Meeting newMeeting = Meeting.CreateFromUserInput(isoYear, isoWeek, selectedRoom);
+
+							// Tjek om lokalet er ledigt i det ønskede tidsrum før vi gemmer mødet. 
+							// Nu kan samme tidspunkt godt findes i andre lokaler, men ikke i det lokale brugeren står på.
+							if (!selectedRoom.IsAvailable(meetings, newMeeting.IsoYear, newMeeting.IsoWeek, newMeeting.IsoDay, newMeeting.StartHour, newMeeting.EndHour))
+							{
+								Console.WriteLine();
+								Console.ForegroundColor = ConsoleColor.Red;
+								Console.WriteLine("Lokalet er ikke ledigt i det tidsrum. Tryk en tast...");
+								Console.ResetColor();
+								Console.ReadKey(true);
+								break;
+							}
+
+							meetings.Add(newMeeting);
+							SaveMeetings(meetings);
 							break;
 						}
 
 					case ConsoleKey.D:
 						{
 
-							CancelFlow(meetings, isoYear, isoWeek);
+							CancelFlow(meetings, isoYear, isoWeek, selectedRoom);
 							break;
 						}
 
@@ -96,7 +144,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 
 		static void PrintMenu()
 		{
-			string menuText = "←/→ skift uge   N nyt møde   D aflys møde   Q/Esc afslut";
+			string menuText = "←/→ skift uge       ↑/↓ skift lokale       N Opret nyt møde       D aflys møde       Q/Esc afslut";
 
 			int windowWidth = Console.WindowWidth;
 			int padding = Math.Max(0, (windowWidth - menuText.Length) / 2); // beregn hvor mange mellemrum der skal til for at centrere menuen
@@ -108,22 +156,28 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			// ←/→ skift uge (gul)
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.Write("←/→");
-			Console.Write(" skift uge   ");
+			Console.Write(" skift uge       ");
+			Console.ResetColor();
+
+			// ↑/↓ skift lokale (cyan)
+			Console.ForegroundColor = ConsoleColor.Cyan;
+			Console.Write("↑/↓");
+			Console.Write(" skift lokale       ");
 			Console.ResetColor();
 
 			// N nyt møde (blå)
 			Console.ForegroundColor = ConsoleColor.Blue;
 			Console.Write("N");
-			Console.Write(" nyt møde   ");
+			Console.Write(" nyt møde       ");
 			Console.ResetColor();
 
 			// D aflys møde (rød)
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.Write("D");
-			Console.Write(" aflys møde   ");
+			Console.Write(" aflys møde       ");
 			Console.ResetColor();
 
-			// Q/Esc afslut (grå)
+			// Q/Esc afslut (Magenta)
 			Console.ForegroundColor = ConsoleColor.Magenta;
 			Console.Write("Q/Esc");
 			Console.WriteLine(" afslut");
@@ -131,7 +185,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 
 		}
 		//  Ugegrid 
-		static void DrawWeek(int isoYear, int isoWeek, List<Meeting> weekMeetings)
+		static void DrawWeek(int isoYear, int isoWeek, List<Meeting> weekMeetings, MeetingRoom selectedRoom)
 		{
 			int timeColWidth = 6;   // fx "08:00  |"
 			int dayColWidth = 25;   // justér efter console-bredde
@@ -141,20 +195,29 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			DateTime monday = ISOWeek.ToDateTime(isoYear, isoWeek, DayOfWeek.Monday);
 			DateTime friday = monday.AddDays(4);
 
-			string weekRangeText = $"Uge {isoWeek} - {monday:dd/MM} → {friday:dd/MM}"; // tekst der viser hvilken uge og dato-interval vi kigger på, fx "Uge 42 - 14/10 → 18/10"
+			string weekRangeText = $"←    Uge {isoWeek} : {monday:dd/MM} - {friday:dd/MM}    →"; // tekst der viser hvilken uge og dato-interval vi kigger på, fx "Uge 42 - 14/10 → 18/10"
 			int windowWidth = Console.WindowWidth;
 			int padding = Math.Max(0, (windowWidth - weekRangeText.Length) / 2); // beregn hvor mange mellemrum der skal til for at centrere menuen
 
 			Console.WriteLine();
-			Console.WriteLine();
 
 			Console.Write(new string(' ', padding)); // print antal af mellemrum lige beregnet for at centrere uge-overskriften
-			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine($"Uge {isoWeek} - {monday:dd/MM} → {friday:dd/MM}");
+			Console.ForegroundColor = ConsoleColor.Yellow;
+			Console.WriteLine($"←    Uge {isoWeek} : {monday:dd/MM} - {friday:dd/MM}    →");
+			Console.ResetColor();
+
+			string selectedRoomText = $"Viser møder for mødelokale: {selectedRoom.Name}  |  Med kapacitet på: {selectedRoom.Capacity}"; // tekst der viser hvilken uge og dato-interval vi kigger på, fx "Uge 42 - 14/10 → 18/10"
+			int windowWidthRoomText = Console.WindowWidth;
+			int paddingRoomText = Math.Max(0, (windowWidth - selectedRoomText.Length) / 2); // beregn hvor mange mellemrum der skal til for at centrere menuen
+
+
+			Console.WriteLine();
+			Console.WriteLine();
+			Console.ForegroundColor = ConsoleColor.Cyan;
+			Console.Write(new string(' ', paddingRoomText));
+			Console.WriteLine($"Viser møder for mødelokale: {selectedRoom.Name}  |  Med kapacitet på: {selectedRoom.Capacity}");
 			Console.ResetColor();
 			Console.WriteLine();
-			Console.WriteLine();
-			
 
 			// Top-linje (lukker boksen over headeren i tabellen - lige ugedagene)
 			Console.Write("     ");
@@ -201,7 +264,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 
 							string cellText;
 							if (innerLine == 0)
-								cellText = $"{meeting.TimeRangeText()}  {meeting.Room}";
+								cellText = $"{meeting.TimeRangeText()}  {selectedRoom.Name}";
 
 							else
 
@@ -230,8 +293,46 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 		}
 
 
+		public class MeetingRoom
+		{
+			public int Id;
+			public string Name = "";
+			public int Capacity;
 
-		class Meeting
+			public MeetingRoom() { } // parameterløs constructor så JSON og andre dele af programmet ikke brokker sig hvis vi senere vil gemme lokaler også
+
+			public MeetingRoom(int id, string name, int capacity)
+			{
+				Id = id;
+				Name = name;
+				Capacity = capacity;
+			}
+
+			// metode der tjekker om lokalet er ledigt i et bestemt tidsrum i en bestemt uge/dag
+			public bool IsAvailable(List<Meeting> meetings, int isoYear, int isoWeek, int isoDay, int startHour, int endHour)
+			{
+				foreach (Meeting meeting in meetings)
+				{
+					if (meeting.RoomId == Id &&
+						meeting.IsoYear == isoYear &&
+						meeting.IsoWeek == isoWeek &&
+						meeting.IsoDay == isoDay)
+					{
+						bool overlap = startHour < meeting.EndHour && endHour > meeting.StartHour;
+
+						if (overlap)
+						{
+							return false;
+						}
+					}
+				}
+
+				return true;
+			}
+		}
+
+
+		public class Meeting
 		{
 			public int IsoYear;
 			public int IsoWeek;
@@ -241,13 +342,15 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			public int StartHour;
 			public int EndHour;
 
-			public string Room = "";
+			public int RoomId; // vi gemmer nu id på mødelokalet i stedet for en tekststreng, så vi kan koble mødet til et fast defineret lokale
 			public string Participants = "";
 			public string Note = "";
 
+			public Meeting() { } // parameterløs constructor nødvendig for JSON deserialization, ellers ville vi få en fejl når vi prøver at indlæse møderne fra filen, fordi JSON deserialization kræver en parameterløs constructor for at kunne oprette objekter ud fra JSON-dataen. Hvis vi ikke havde denne constructor ville indlæsningen af møderne fejle.
+
 			public override string ToString()
 			{
-				return $"{TimeRangeText()}  Lokale: {Room}  Deltagere: {Participants}  Note: {Note}";
+				return $"{TimeRangeText()}  Lokale-id: {RoomId}  Deltagere: {Participants}  Note: {Note}";
 			}
 
 
@@ -262,12 +365,14 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 				return hour >= StartHour && hour < EndHour; // fx et møde der starter kl 8 og slutter kl 10 dækker time 8 (fordi 8 >= 8 og 8 < 10) og time 9 (fordi 9 >= 8 og 9 <10)
 			}
 
-			public static Meeting CreateFromUserInput(int isoYear, int isoWeek) // statisk metode der opretter et Meeting-objekt ved at spørge brugeren om input i konsollen. Den tager isoYear og isoWeek som parametre fordi et møde altid skal høre til en bestemt uge, så vi sætter det automatisk ud fra hvilken uge brugeren kigger på når de opretter mødet.
+			public static Meeting CreateFromUserInput(int isoYear, int isoWeek, MeetingRoom selectedRoom) // statisk metode der opretter et Meeting-objekt ved at spørge brugeren om input i konsollen. Den tager isoYear og isoWeek som parametre fordi et møde altid skal høre til en bestemt uge, så vi sætter det automatisk ud fra hvilken uge brugeren kigger på når de opretter mødet.
 			{
 
 
 				Console.Clear();
 				Console.WriteLine("Opret nyt møde");
+				Console.WriteLine();
+				Console.WriteLine($"Valgt mødelokale: {selectedRoom.Name}");
 				Console.WriteLine();
 
 				int day = ReadInt("Indtast det nummer som svarer til ugedagen du vil booke | Man = 1 | Tir = 2 | Ons = 3 | Tor = 4 | Fre = 5 |: ", 1, 5); // kunne også laves til en enum eller noget med navne i stedet for
@@ -281,7 +386,6 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 					endHour = ReadInt("Slut tid (9-18): ", 9, 18);
 				}
 
-				string room = ReadTextFromUser("Mødelokale: ");
 				string participants = ReadTextFromUser("Deltagere (kommasepareret): ");
 				string note = ReadTextFromUser("Note (valgfri): ");
 
@@ -291,7 +395,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 				m.IsoDay = day;
 				m.StartHour = startHour;
 				m.EndHour = endHour;
-				m.Room = room;
+				m.RoomId = selectedRoom.Id;
 				m.Participants = participants;
 				m.Note = note;
 
@@ -325,12 +429,12 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 
 
 		//  Aflysning 
-		static void CancelFlow(List<Meeting> meetings, int isoYear, int isoWeek) // metode der håndterer hele flowet for at aflyse et møde. Den tager listen af møder og den uge vi kigger på som parametre, så den kan vise møderne i den uge og fjerne det møde brugeren vælger at aflyse fra listen.
+		static void CancelFlow(List<Meeting> meetings, int isoYear, int isoWeek, MeetingRoom selectedRoom) // metode der håndterer hele flowet for at aflyse et møde. Den tager listen af møder og den uge vi kigger på som parametre, så den kan vise møderne i den uge og fjerne det møde brugeren vælger at aflyse fra listen.
 		{
 			Console.Clear();
 
 			var weekMeetings = meetings
-				.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek)
+				.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek && m.RoomId == selectedRoom.Id)
 				.OrderBy(m => m.IsoDay)
 				.ThenBy(m => m.StartHour)
 				.ToList();
@@ -339,10 +443,12 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			Console.WriteLine("AFLYS MØDE");
 			Console.ResetColor();
 			Console.WriteLine();
+			Console.WriteLine($"Valgt mødelokale: {selectedRoom.Name}");
+			Console.WriteLine();
 
 			if (weekMeetings.Count == 0)
 			{
-				Console.WriteLine("Der er ingen møder at aflyse i denne uge. Tryk på en tast for at gå tilbage...");
+				Console.WriteLine("Der er ingen møder at aflyse i denne uge for dette lokale. Tryk på en tast for at gå tilbage...");
 				Console.ReadKey(true);
 				return;
 			}
@@ -355,7 +461,8 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 				DateTime meetingDate = monday.AddDays(m.IsoDay - 1);
 
 				Console.ForegroundColor = ConsoleColor.Blue;
-				Console.WriteLine($"{i + 1}. {meetingDate:dd/MM}  {m.TimeRangeText()}  Lokale: {m.Room}  Deltagere: {m.Participants}  Note: {m.Note}"); // Print en nummereret liste over møderne i ugen med dato, tid, lokale, deltagere og note, så brugeren kan vælge hvilket møde de vil aflyse ud fra det
+				Console.WriteLine($"{i + 1}. {meetingDate:dd/MM}  {m.TimeRangeText()}  Lokale: {selectedRoom.Name}  Deltagere: {m.Participants}  Note: {m.Note}"); // Print en nummereret liste over møderne i ugen med dato, tid, lokale, deltagere og note, så brugeren kan vælge hvilket møde de vil aflyse ud fra det
+				Console.ResetColor();
 			}
 
 			Console.WriteLine();
@@ -387,6 +494,7 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 			if (confirmKey == ConsoleKey.J)
 			{
 				meetings.Remove(target);
+				SaveMeetings(meetings);
 
 				//Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine();
@@ -394,22 +502,49 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 				Console.ResetColor();
 				Console.WriteLine();
 				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.WriteLine($"============== [SLETTET] {target} [SLETTET] ===============");
+				Console.WriteLine($"============== [SLETTET] {target.TimeRangeText()}  Lokale: {selectedRoom.Name}  Deltagere: {target.Participants}  Note: {target.Note} [SLETTET] ===============");
 				Console.ResetColor();
-
-
-
 
 				Console.WriteLine("Tryk en tast...");
 				Console.ReadKey(true);
 			}
 			else
 			{
-				Console.WriteLine("Annulleret. Tryk en tast...");
+				Console.WriteLine("Annulleret. Tryk på en hvilkensomhelst tast...");
 				Console.ReadKey(true);
 			}
 
 
+		}
+
+		static void SaveMeetings(List<Meeting> meetings)
+		{
+			var options = new JsonSerializerOptions
+			{
+				WriteIndented = true,
+				IncludeFields = true
+			};
+
+			string json = JsonSerializer.Serialize(meetings, options);
+			File.WriteAllText(filePath, json);
+		}
+
+		static List<Meeting> LoadMeetings()
+		{
+			if (!File.Exists(filePath))
+			{
+				return new List<Meeting>();
+			}
+
+			var options = new JsonSerializerOptions
+			{
+				IncludeFields = true
+			};
+
+			string json = File.ReadAllText(filePath);
+			List<Meeting>? meetings = JsonSerializer.Deserialize<List<Meeting>>(json, options);
+
+			return meetings ?? new List<Meeting>();
 		}
 	}
 }
