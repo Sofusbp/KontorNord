@@ -6,8 +6,8 @@ namespace ProjektNordUgevisning_Aflysning_af_møde_isa
 	using System.Collections.Generic; // for List<>
 	using System.Globalization; // til ISOWeek
 	using System.Linq; // for Where, OrderBy, FirstOrDefault
-	using System.IO; // for File I/O hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
-	using System.Text.Json; // for JSON serialization hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
+	using System.IO; // for File I/O hvis vi skulle gemme møderne i en fil 
+	using System.Text.Json; // for JSON serialization hvis vi skulle gemme møderne i en fil 
 
 
 	internal class Program
