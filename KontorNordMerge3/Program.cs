@@ -211,13 +211,24 @@
 									break;
 								}
 
-								meetings.Add(newMeeting);
-								SaveMeetings(meetings);
+                                //Yukari
+                                bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
 
-								Console.ForegroundColor = ConsoleColor.Blue;
-								Console.WriteLine();
-								Console.WriteLine("Mødet er nu oprettet.");
-								Console.ResetColor();
+                                if (isConfirmed)
+                                {
+                                    Console.WriteLine("Mødet er bekræftet.");
+                                    meetings.Add(newMeeting);
+                                    SaveMeetings(meetings);
+                                    Console.ForegroundColor = ConsoleColor.Blue;
+                                    Console.WriteLine();
+                                    Console.WriteLine("Mødet er nu oprettet.");
+									
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Mødet er ikke bekræftet.");
+                                }
+                             							
 								Console.WriteLine("Tryk på en tast for at gå tilbage til menuen...");
 								Console.ReadKey(true);
 								break;
@@ -330,9 +341,20 @@
 									Console.ReadKey(true);
 									break;
 								}
+                                bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
+                                if (isConfirmed)
+                                {
+                                    Console.WriteLine("Mødet er bekræftet.");                                    
+                                    meetings.Add(newMeeting);
+                                    SaveMeetings(meetings);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Mødet er ikke bekræftet.Tast en af keyboard.Du kommer tilbage til menu nu.");
+                                    Console.ReadLine();
 
-								meetings.Add(newMeeting);
-								SaveMeetings(meetings);
+                                }
+                                
 								break;
 							}
 
@@ -540,7 +562,38 @@
 				}
 			}
 
-			static void MeetingConfirmation(Meeting meeting, MeetingRoom selectedRoom)
+
+            //Yukari
+            static bool ConfirmMeeting(Meeting meeting, MeetingRoom selectedRoom)
+            {
+                MeetingConfirmation(meeting, selectedRoom);
+				Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Er du sikker på at du vil bekræfte dette møde, før retur til menu? (ja/nej)");
+				Console.ResetColor();               
+                string input = Console.ReadLine();
+
+                while (true) 
+                {
+                    if (input.Equals("ja", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true; 
+                    }
+                    else if (input.Equals("nej", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+						Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Ugyldigt input. Indtast 'ja' eller 'nej'.");
+						Console.ResetColor();
+                        input = Console.ReadLine();
+                    }
+                }
+
+            }
+
+            static void MeetingConfirmation(Meeting meeting, MeetingRoom selectedRoom)
 			{
 				Console.Clear();
 
