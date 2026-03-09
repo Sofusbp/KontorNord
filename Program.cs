@@ -44,14 +44,13 @@ namespace KontorNord
 
 					case 4:
 						isRunning = false;
-						/*     exitProgram(); Hvis vi beslutter os for at benytte exitProgram-Metoden nederst i Programmet */
 						break;
 
 					default:
 						Console.ForegroundColor = ConsoleColor.Red;
 						Console.WriteLine("Please input a valid number (1-4)");
 						Console.ResetColor();
-						Console.ReadKey(true); // Betyder: "Hvis ikke denne tast i consollen"
+						Console.ReadKey(true); // Betyder: "Hvis ikke denne tast i consollen" -- Altså hvis brugeren taster "5" f.eks.
 						Console.Clear(); // Rydder fejl-beskeden ved fejl-input
 						break;
 				}
@@ -84,23 +83,24 @@ namespace KontorNord
 			Console.ResetColor(); // Ikke nødvendig, men god skik
 		}
 
-		static void bookMeetings() // Metoden, der tillader brugeren at booke møder
+		static void bookMeetings() // Metoden, der tillader brugeren at booke møder -- Kig på den, som vores "Controller", der styrer hele booking processen
 		{
 			Console.Clear(); // Intern C# Metode, der sletter alt fra det forrige trin
 
-			string day = SelectDay();
+			string day = SelectDay(); // Brugerens valgte dag retuneres som en String og gemmes i variablen 'day'
 
-			string startTime = SelectStartTime();
+			MødeLokaler lokale = SelectRoom(); // Metonden returnerer et objekt fra MødeLokaler-Klassen og gemmes i variablen 'lokale'
 
-			string endTime = SelectEndTime(startTime);
+			string startTime = SelectStartTime(); // Brugerens valgte starttidspunkt returneres som en String og gemmes i variablen 'startTime'
 
-		    List<string> participants = AddParticipants();
+			string endTime = SelectEndTime(startTime); // Starttidspunkt bliver her sendt som parameter, så brugeren KUN kan vælge tider efter valgte 'startTime' -- Brugerens valgte sluttidspunkt returneres som en String og gemmes i variablen 'endTime'
 
-			string note = AddNote();
+		    List<string> participants = AddParticipants(); // Deltager Liste (taget fra Casen)
 
-			MeetingConfirmation(day, startTime, endTime, participants, note);
+			string note = AddNote(); // Metode, der tillader noter til møder
 
-			// I slutningen skal jeg lave en: "Møde er nu booked"
+			MeetingConfirmation(day, lokale, startTime, endTime, participants, note); // Metoder, der har alle variabler gemt fra tidligere metoder i flowet
+
 			// Kalder så: MødeBekræftelse()
 
 			Console.ForegroundColor = ConsoleColor.Blue;
@@ -126,11 +126,12 @@ namespace KontorNord
             Console.WriteLine("");
 			Console.Write("Vælg nummer og afslut med <Enter>: ");
 
-			int valg; // Sikrer, at hvis brugen IKKE taster et tal(int), så får brugeren en fejl besked - C# prøver at konvetere string til int - Lokal Variable til metoden
-			while (!int.TryParse(Console.ReadLine(), out valg)) // Out = At tasten bliver sendt ud i variablen: "valg"
+			int valg; 
+			while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > 5) // Out = At tasten bliver sendt ud i variablen: "valg"
+																						// Sikrer, at hvis brugen IKKE taster et tal(int), så får brugeren en fejl besked - C# prøver at konvetere string til int - Lokal Variable til metoden
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.Write("Indtast venligst et tal:");
+				Console.Write("Indtast venligst et tal: ");
 				Console.ResetColor();
 			}
 
@@ -143,6 +144,51 @@ namespace KontorNord
 				case 5: return "Fredag";
 				default: return "Mandag";
 			}
+
+
+		}
+
+		static MødeLokaler SelectRoom()
+		{
+			Console.Clear();
+
+			List<MødeLokaler> rooms = new List<MødeLokaler> // Hvert lokale oprettes som et objekt i klassen MødeLokaler
+		{
+			new MødeLokaler("Hytten"),
+			new MødeLokaler("Kælderen"),
+			new MødeLokaler("Fulgeburet"),
+			new MødeLokaler("Grotten")
+		};
+
+			Console.WriteLine("Vælg mødelokale:");
+			Console.WriteLine("");
+
+			for (int i = 0; i < rooms.Count; i++)
+			{
+				Console.WriteLine($"{i + 1}) {rooms[i].Name}");
+			}
+			// Viser hvert mødelokale i konsollen.
+			// i + 1 bruges for at nummereringen starter ved 1 i stedet for 0 (som ellers er standard i arrays/lister).
+			// rooms[i] henter objektet på position i i listen.
+			// .Name henter navnet på mødelokalet fra objektet.
+
+			Console.WriteLine("");
+			Console.Write("Vælg nummer og afslut med <Enter>: ");
+
+			int valg; // Variabel der gemmer brugerens valg
+
+			while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > rooms.Count)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.Write($"Indtast et tal mellem 1 og {rooms.Count}: ");
+				Console.ResetColor();
+			}
+			// Programmet forsøger at konvertere brugerens input til et helt tal ved hjælp af TryParse
+			// Hvis input ikke er et tal, eller hvis tallet ligger uden for intervallet af gyldige lokaler
+			// vil betingelsen være sand, og brugeren bliver bedt om at indtaste et nyt tal
+			// Loopet fortsætter derfor indtil brugeren indtaster et gyldigt tal mellem 1 og antallet af lokaler
+
+			return rooms[valg - 1];
 		}
 
 
@@ -179,7 +225,7 @@ namespace KontorNord
 			Console.Write("Vælg nummer og afslut med <Enter>: ");
 
 			int valg; // Sikrer, at hvis brugen IKKE taster et tal(int), så får brugeren en fejl besked - C# prøver at konvetere string til int - Lokal Variable til metoden
-			while (!int.TryParse(Console.ReadLine(), out valg))
+			while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > tider.Count)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.Write("Indtast venligst et tal: ");
@@ -204,37 +250,62 @@ namespace KontorNord
 			Console.ResetColor();
 			Console.WriteLine("");
 
-			int mulighed = 1;
+			int mulighed = 1; // Variabel der bruges til nummerering af de tider der vises til brugeren
 
-			for (int tid = 8; tid <= 17; tid++)
+			for (int tid = 8; tid <= 17; tid++) // For-loop der genererer alle mulige tidspunkter mellem kl. 08:00 og 17:00
 			{
-				tider.Add($"{tid:D2}:00");
+				tider.Add($"{tid:D2}:00"); // Tilføjer hele klokkeslæt (fx 08:00, 09:00 osv) til listen -- :D2 sikrer at tallet altid vises med to cifre
 
-				if (tid != 17)
+				if (tid != 17) // Hvis timen ikke er 17, tilføjes også et halvt tidspunkt -- '!' Operatør
 				{
-					tider.Add($"{tid:D2}:30");
+					tider.Add($"{tid:D2}:30"); // Tilføjer halvtime (fx 08:30)
 				}
 			}
 
-			int startIndex = tider.IndexOf(startTime);
+			int startIndex = tider.IndexOf(startTime); // Finder positionen i listen hvor det valgte starttidspunkt ligger
 
-			for (int i = startIndex + 1; i < tider.Count; i++)
+			for (int i = startIndex + 1; i < tider.Count; i++) // For-loop der viser alle tider efter starttidspunktet --  Loopet starter derfor ved startIndex + 1
 			{
-				Console.WriteLine($"{i - startIndex}) {tider[i]}");
+				Console.WriteLine($"{i - startIndex}) {tider[i]}"); // Viser sluttiderne for brugeren
 			}
+
+			int max = tider.Count - startIndex - 1; // Beregner hvor mange mulige sluttider der findes efter starttidspunktet
 
 			Console.WriteLine("");
 			Console.Write("Vælg nummer og afslut med <Enter>: ");
 
-			int valg; // Sikrer, at hvis brugen IKKE taster et tal(int), så får brugeren en fejl besked - C# prøver at konvetere string til int - Lokal Variable til metoden
-			while (!int.TryParse(Console.ReadLine(), out valg))
+			int valg; // Variabel der gemmer brugerens valg
+
+			while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > max) // Loopet fortsætter indtil brugeren indtaster et tal der ligger indenfor intervallet af de viste sluttider
+																						  // Efter inputtet er læst og forsøgt konverteret til et tal kontrolleres det også om tallet ligger inden for det tilladte interval
+																						  // || er 'Or/Eller' operatøren
+																						  // valg < 1 betyder at brugeren har indtastet et tal der er mindre end 1
+																						  // valg > max betyder at brugeren har indtastet et tal der er større end det højeste tilladte valg
+																						  // Hvis en af disse betingelser er sand, fortsætter while-loopet og brugeren bliver bedt om at indtaste et nyt tal
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
-				Console.Write("Indtast venligst et tal: ");
+				Console.Write($"Indtast et tal mellem 1 og {max}: ");
 				Console.ResetColor();
 			}
 
-			return tider[startIndex + valg];
+			return tider[startIndex + valg]; // Returnerer det valgte sluttidspunkt --  startIndex + valg bruges til at finde den korrekte position i listen
+
+			// Eksempel på denne return:
+			// Hvis starttidspunktet er 10:00 og ligger på indeks 4 i listen
+			// og brugeren vælger mulighed 2 (f.eks. 11:00)
+			// vil beregningen blive:
+			// startIndex (4) + valg (2(endTime)) = indeks 6
+
+				/* | Index | Tid               |
+				| ----- | ----------------- |
+				| 0 | 08:00 |
+				| 1 | 08:30 |
+				| 2 | 09:00 |
+				| 3 | 09:30 |
+				| 4 | 10:00 ← startTime |
+				| 5 | 10:30 |
+				| 6 | 11:00 |
+				| 7 | 11:30 | */
 		}
 
 
@@ -263,7 +334,7 @@ namespace KontorNord
 
 			char svar = 'j';
 
-			while (svar == 'j')
+			while (svar == 'j') // Hvis svaret er lig med 'j', så fortsætter loopet
 			{
 				foreach (string employee in employees)
 				{
@@ -275,14 +346,14 @@ namespace KontorNord
 
 				int valg;
 
-				while (!int.TryParse(Console.ReadLine(), out valg))
+				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > employees.Count) // Sikrer, at brugeren kun kan vælge mellem antallet af medarbejdere i Index
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
 					Console.Write("Indtast venligst et tal: ");
 					Console.ResetColor();
 				}
 
-				participants.Add(employees[valg - 1]);
+				participants.Add(employees[valg - 1]); // Tilføjelse af flere deltagere
 
 				Console.WriteLine("");
 				Console.Write("Vil du vælge flere ansatte til mødet? --- Svar: j/n: ");
@@ -293,15 +364,16 @@ namespace KontorNord
 
 			Console.WriteLine("Du har nu valgt deltager(e) til mødet:");
 
-			foreach (var participant in participants)
+			foreach (var participant in participants) // 'var', da C# godt kan læse en simpel string variabel
 			{
 				Console.WriteLine(participant);
 			}
 
+
 			return participants;
 		}
 
-		static string AddNote()
+		static string AddNote() // Metode, der tillader en tilføjelse af en note
 		{
 			Console.Clear();
 
@@ -318,7 +390,7 @@ namespace KontorNord
 			return note;
 		}
 
-		static void MeetingConfirmation(string day, string startTime, string endTime, List<string> participants, string note) // Denne metode kalder al information fra tidligere metoder
+		static void MeetingConfirmation(string day, MødeLokaler lokaler, string startTime, string endTime, List<string> participants, string note) // Denne metode kalder alle variabler fra tidligere metoder
 		{
 			Console.Clear();
 
@@ -332,22 +404,27 @@ namespace KontorNord
 			Console.WriteLine("");
 			Console.WriteLine($"Dag: {day}");
 			Console.WriteLine("");
+			Console.WriteLine($"Lokale: {lokaler.Name}");
+			Console.WriteLine("");
 			Console.WriteLine($"Tid: {startTime} - {endTime}");
-
 			Console.WriteLine("");
 			Console.WriteLine("Deltagere:");
 
-			foreach (string participant in participants)
+			
+
+			foreach (string participant in participants) // Loopet bruges til at vise alle deltagere der blev valgt under bookingprocessen
 			{
 				Console.WriteLine($"{participant}");
 			}
 
 			Console.WriteLine("");
 
-			if (!string.IsNullOrWhiteSpace(note))
+			if (!string.IsNullOrWhiteSpace(note)) // Kontrollerer om brugeren har indtastet en note
+												  // IsNullOrWhiteSpace sikrer at noten ikke er tom eller kun består af mellemrum
 			{
 				Console.WriteLine($"Note: {note}");
 			}
+
 
 			Console.WriteLine("");
 			Console.WriteLine("Mødet er nu registreret i systemet.");
@@ -389,12 +466,6 @@ namespace KontorNord
 				}
 			}
 		}
-
-		/*  static void exitProgram() // Det her er lidt ringe, men den virker. Dog, foretrækker jeg isRunning = false i Case "4"
-        {
-            Environment.Exit(0); // Exit the program
-        }
-      */
 
 	}
 }
