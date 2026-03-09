@@ -189,6 +189,12 @@ namespace KontorNord
 			// Loopet fortsætter derfor indtil brugeren indtaster et gyldigt tal mellem 1 og antallet af lokaler
 
 			return rooms[valg - 1];
+			// Eksempel:
+			// Eksempel:
+			// Hvis brugeren vælger 2 (Kælderen),
+			// bliver beregningen:
+			// 2 - 1 = indeks 1
+			// rooms[1] returnerer derfor "Kælderen".
 		}
 
 
@@ -334,6 +340,9 @@ namespace KontorNord
 
 			char svar = 'j';
 
+			// Jeg mangler stadig at lave en char 'svarNej'
+			// Jeg mangler stadig lokig for, at man ikke kan vælge samme deltager 2 gange
+
 			while (svar == 'j') // Hvis svaret er lig med 'j', så fortsætter loopet
 			{
 				foreach (string employee in employees)
@@ -354,6 +363,9 @@ namespace KontorNord
 				}
 
 				participants.Add(employees[valg - 1]); // Tilføjelse af flere deltagere
+													   // Tilføjer den valgte medarbejder til listen over mødedeltagere
+													   // Brugeren vælger et nummer der starter fra 1, men listen "employees" bruger indeks der starter fra 0
+													   // Derfor trækkes 1 fra brugerens valg for at finde den korrekte position i listen
 
 				Console.WriteLine("");
 				Console.Write("Vil du vælge flere ansatte til mødet? --- Svar: j/n: ");
@@ -410,7 +422,6 @@ namespace KontorNord
 			Console.WriteLine("");
 			Console.WriteLine("Deltagere:");
 
-			
 
 			foreach (string participant in participants) // Loopet bruges til at vise alle deltagere der blev valgt under bookingprocessen
 			{
