@@ -89,7 +89,7 @@ namespace KontorNord
 
 			string day = SelectDay(); // Brugerens valgte dag retuneres som en String og gemmes i variablen 'day'
 
-			MødeLokaler lokale = SelectRoom(); // Metonden returnerer et objekt fra MødeLokaler-Klassen og gemmes i variablen 'lokale'
+			// MødeLokaler lokale = SelectRoom(); // Metonden returnerer et objekt fra MødeLokaler-Klassen og gemmes i variablen 'lokale'
 
 			string startTime = SelectStartTime(); // Brugerens valgte starttidspunkt returneres som en String og gemmes i variablen 'startTime'
 
@@ -99,7 +99,7 @@ namespace KontorNord
 
 			string note = AddNote(); // Metode, der tillader noter til møder
 
-			MeetingConfirmation(day, lokale, startTime, endTime, participants, note); // Metoder, der har alle variabler gemt fra tidligere metoder i flowet
+			MeetingConfirmation(day, /* lokale*/ startTime, endTime, participants, note); // Metoder, der har alle variabler gemt fra tidligere metoder i flowet
 
 			// Kalder så: MødeBekræftelse()
 
@@ -148,7 +148,7 @@ namespace KontorNord
 
 		}
 
-		static MødeLokaler SelectRoom()
+		/* static MødeLokaler SelectRoom()
 		{
 			Console.Clear();
 
@@ -195,7 +195,7 @@ namespace KontorNord
 			// bliver beregningen:
 			// 2 - 1 = indeks 1
 			// rooms[1] returnerer derfor "Kælderen".
-		}
+		}*/ 
 
 
 		static string SelectStartTime()
@@ -402,7 +402,7 @@ namespace KontorNord
 			return note;
 		}
 
-		static void MeetingConfirmation(string day, MødeLokaler lokaler, string startTime, string endTime, List<string> participants, string note) // Denne metode kalder alle variabler fra tidligere metoder
+		static void MeetingConfirmation(string day, /*MødeLokaler lokaler*/ string startTime, string endTime, List<string> participants, string note) // Denne metode kalder alle variabler fra tidligere metoder
 		{
 			Console.Clear();
 
@@ -416,7 +416,7 @@ namespace KontorNord
 			Console.WriteLine("");
 			Console.WriteLine($"Dag: {day}");
 			Console.WriteLine("");
-			Console.WriteLine($"Lokale: {lokaler.Name}");
+			// Console.WriteLine($"Lokale: {lokaler.Name}");
 			Console.WriteLine("");
 			Console.WriteLine($"Tid: {startTime} - {endTime}");
 			Console.WriteLine("");
