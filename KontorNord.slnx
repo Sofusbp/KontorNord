@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="KontorNord/KontorNord.csproj" />
+  <Project Path="KontorNordMerge07/KontorNordMerge07.csproj" Id="7dd7cddb-ba38-4912-b797-b27dcaf2a9f2" />
 </Solution>
