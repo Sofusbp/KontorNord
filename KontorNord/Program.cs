@@ -341,6 +341,7 @@
                                     Console.ReadKey(true);
                                     break;
                                 }
+                                // Yukari
                                 bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
                                 if (isConfirmed)
                                 {
