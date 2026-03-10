@@ -166,7 +166,7 @@
 				{
 					Console.Clear();
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"===== Velkommen tilbage, {name} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
+					Console.WriteLine($"===== Welcome, {workerID} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
 					Console.ResetColor();
 					Console.WriteLine(""); // Lidt spacing
 					Console.WriteLine($"Aktuelt lokale: {rooms[selectedRoomIndex].Name}");
@@ -211,13 +211,23 @@
 									break;
 								}
 
-								meetings.Add(newMeeting);
-								SaveMeetings(meetings);
+								bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
 
-								Console.ForegroundColor = ConsoleColor.Blue;
-								Console.WriteLine();
-								Console.WriteLine("Mødet er nu oprettet.");
-								Console.ResetColor();
+								if (isConfirmed)
+								{
+									Console.WriteLine("Mødet er bekræftet.");
+									meetings.Add(newMeeting);
+									SaveMeetings(meetings);
+									Console.ForegroundColor = ConsoleColor.Blue;
+									Console.WriteLine();
+									Console.WriteLine("Mødet er nu oprettet.");
+
+								}
+								else
+								{
+									Console.WriteLine("Mødet er ikke bekræftet.");
+								}
+
 								Console.WriteLine("Tryk på en tast for at gå tilbage til menuen...");
 								Console.ReadKey(true);
 								break;
@@ -282,7 +292,7 @@
 					{
 						case ConsoleKey.RightArrow:
 							{
-								var nextWeekDate = ISOWeek.ToDateTime(isoYear, isoWeek, DayOfWeek.Monday).AddDays(7);
+								var nextWeekDate = ISOWeek.ToDateTime(isoYear, isoWeek, DayOfWeek.Monday).AddDays(7); // gå til næste uge ved at tage mandag i nuværende uge og lægge 7 dage til
 								isoYear = ISOWeek.GetYear(nextWeekDate);
 								isoWeek = ISOWeek.GetWeekOfYear(nextWeekDate);
 								break;
@@ -330,9 +340,20 @@
 									Console.ReadKey(true);
 									break;
 								}
+								bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
+								if (isConfirmed)
+								{
+									Console.WriteLine("Mødet er bekræftet.");
+									meetings.Add(newMeeting);
+									SaveMeetings(meetings);
+								}
+								else
+								{
+									Console.WriteLine("Mødet er ikke bekræftet.Tast en af keyboard.Du kommer tilbage til menu nu.");
+									Console.ReadLine();
 
-								meetings.Add(newMeeting);
-								SaveMeetings(meetings);
+								}
+
 								break;
 							}
 
@@ -538,6 +559,37 @@
 					case "Fredag": return 5;
 					default: return 1;
 				}
+			}
+
+
+			//Yukari
+			static bool ConfirmMeeting(Meeting meeting, MeetingRoom selectedRoom)
+			{
+				MeetingConfirmation(meeting, selectedRoom);
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine("Er du sikker på at du vil bekræfte dette møde, før retur til menu? (ja/nej)");
+				Console.ResetColor();
+				string input = Console.ReadLine();
+
+				while (true)
+				{
+					if (input.Equals("ja", StringComparison.OrdinalIgnoreCase))
+					{
+						return true;
+					}
+					else if (input.Equals("nej", StringComparison.OrdinalIgnoreCase))
+					{
+						return false;
+					}
+					else
+					{
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.WriteLine("Ugyldigt input. Indtast 'ja' eller 'nej'.");
+						Console.ResetColor();
+						input = Console.ReadLine();
+					}
+				}
+
 			}
 
 			static void MeetingConfirmation(Meeting meeting, MeetingRoom selectedRoom)
