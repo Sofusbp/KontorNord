@@ -46,6 +46,7 @@
 
 					Console.WriteLine("Indtast dit medarbejder ID for at begynde: ");
 					workerID = Console.ReadLine() ?? "";
+					Console.WriteLine("");
 
 					// Selve WorkerID godkendelsen - der er brugt de to første initialer i fornavn og et inital i efternavn.
 					// Adgangskoden er lavet omvendt af WorkerID - så de samme initialer blot baglæns.
@@ -141,9 +142,9 @@
 				// Name fra tidligere kaldes herned og så vises det fulde navn i velkomst menuen.
 				Console.Clear();
 				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine("=========================");
+				Console.WriteLine("======================");
 				Console.WriteLine($"VELKOMMEN {name}");
-				Console.WriteLine("=========================");
+				Console.WriteLine("======================");
 				Console.WriteLine("");
 				Console.WriteLine("Tryk på en tast for at komme ind i menuen");
 				Console.ResetColor();
@@ -170,12 +171,16 @@
 				while (isRunning)
 				{
 					Console.Clear();
-					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"===== Welcome, {name} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
+					Console.ForegroundColor = ConsoleColor.Yellow;
+					Console.WriteLine("============================");
+					Console.WriteLine($"  Velkommen, {name} "); // Det første man ser efter log-in 
+					Console.WriteLine("============================");
 					Console.ResetColor();
 					Console.WriteLine(""); // Lidt spacing
+					Console.ForegroundColor = ConsoleColor.Cyan;
 					Console.WriteLine($"Aktuelt lokale: {rooms[selectedRoomIndex].Name}");
 					Console.WriteLine($"Aktuel uge: {isoWeek}");
+					Console.ResetColor();
 					Console.WriteLine("");
 
 					ShowMainMenu(); // Kalder Menu-Metode, der viser Menu Options
@@ -270,12 +275,14 @@
 
 			static void ShowMainMenu() // Metoden, der viser vores menu efter log-in
 			{
-				Console.WriteLine("1) Show current, past and/or future meetings via our Calendar");
-				Console.WriteLine("2) Book a meeting");
-				Console.WriteLine("3) Cancel a meeting");
+				Console.WriteLine("1) KontorNord Kalender");
+				Console.WriteLine("2) Opret møde og book mødelokale");
+				Console.WriteLine("3) Aflys et møde");
 				Console.WriteLine("4) Exit");
 				Console.WriteLine("");
+				Console.ForegroundColor = ConsoleColor.DarkCyan;
 				Console.Write("Vælg nummer og afslut med <Enter>: ");
+				Console.ResetColor();
 			}
 
 			static void CalendarLoop(List<Meeting> meetings, List<MeetingRoom> rooms, ref int isoYear, ref int isoWeek, ref int selectedRoomIndex) // Metode der håndterer hoved-loopet for kalenderen, hvor møder vises og brugeren kan navigere mellem uger og lokaler
