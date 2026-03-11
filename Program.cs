@@ -11,14 +11,14 @@
         using System.Runtime.Intrinsics.X86;
 		using System.Text.Json; // for JSON serialization hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
 
-		internal class Program
+		internal class Programg
 		{
 			static string filePath = "meetings.json"; // filsti for hvor møderne skal gemmes. Vi gemmer møderne i en JSON-fil i samme mappe som programmet, så det er nemt at finde.
 
 			static void Main(string[] args)
 			{
 				Console.OutputEncoding = System.Text.Encoding.UTF8; // for at kunne bruge pile-symboler i menuen og ÆØÅ
-				Console.Title = "♥ Bookingsystem - KontorNord ♥"; // Titel på konsol-vinduet <3 
+				Console.Title = "♥♥ Bookingsystem - KontorNord ♥♥"; // Titel på konsol-vinduet <3 
 				Console.ResetColor();
 
 
