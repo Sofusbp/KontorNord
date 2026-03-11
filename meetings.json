@@ -1,0 +1,212 @@
+[
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 1,
+    "StartHour": 8,
+    "EndHour": 10,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": "kunde"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 1,
+    "StartHour": 8,
+    "EndHour": 10,
+    "RoomId": 3,
+    "Participants": "Louise Falk (LF)",
+    "Note": "Cisco"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 1,
+    "StartHour": 12,
+    "EndHour": 14,
+    "RoomId": 2,
+    "Participants": "Henrik Kr\u00F8ll (HK)",
+    "Note": "moms"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 2,
+    "StartHour": 12,
+    "EndHour": 15,
+    "RoomId": 1,
+    "Participants": "Mette Ates (MA)",
+    "Note": "skat"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 3,
+    "StartHour": 10,
+    "EndHour": 13,
+    "RoomId": 1,
+    "Participants": "Jonas Tved (JT)",
+    "Note": "konsult"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 3,
+    "StartHour": 16,
+    "EndHour": 18,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": ""
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 4,
+    "StartHour": 13,
+    "EndHour": 14,
+    "RoomId": 1,
+    "Participants": "Sofie M\u00F8ller (SM)",
+    "Note": "plan"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 11,
+    "IsoDay": 5,
+    "StartHour": 8,
+    "EndHour": 17,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": "ALLE"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 1,
+    "StartHour": 9,
+    "EndHour": 13,
+    "RoomId": 1,
+    "Participants": "Mette Ates (MA)",
+    "Note": "kunde"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 2,
+    "StartHour": 11,
+    "EndHour": 15,
+    "RoomId": 1,
+    "Participants": "Henrik Kr\u00F8ll (HK)",
+    "Note": "plan"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 2,
+    "StartHour": 16,
+    "EndHour": 17,
+    "RoomId": 1,
+    "Participants": "Mette Ates (MA)",
+    "Note": "su"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 3,
+    "StartHour": 9,
+    "EndHour": 13,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": "mail"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 3,
+    "StartHour": 14,
+    "EndHour": 16,
+    "RoomId": 1,
+    "Participants": "Jonas Tved (JT)",
+    "Note": "doku"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 4,
+    "StartHour": 13,
+    "EndHour": 15,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": "konsul"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 5,
+    "StartHour": 13,
+    "EndHour": 18,
+    "RoomId": 1,
+    "Participants": "Jonas Tved (JT)",
+    "Note": "reg"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 5,
+    "StartHour": 8,
+    "EndHour": 9,
+    "RoomId": 1,
+    "Participants": "Sofie M\u00F8ller (SM)",
+    "Note": "s u"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 12,
+    "IsoDay": 2,
+    "StartHour": 10,
+    "EndHour": 16,
+    "RoomId": 3,
+    "Participants": "Henrik Kr\u00F8ll (HK)",
+    "Note": ""
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 13,
+    "IsoDay": 2,
+    "StartHour": 11,
+    "EndHour": 16,
+    "RoomId": 1,
+    "Participants": "Mette Ates (MA)",
+    "Note": "novo"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 13,
+    "IsoDay": 1,
+    "StartHour": 8,
+    "EndHour": 13,
+    "RoomId": 1,
+    "Participants": "Amir Rahimi (AR)",
+    "Note": "LEGO"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 13,
+    "IsoDay": 3,
+    "StartHour": 9,
+    "EndHour": 12,
+    "RoomId": 1,
+    "Participants": "Henrik Kr\u00F8ll (HK)",
+    "Note": "rekru"
+  },
+  {
+    "IsoYear": 2026,
+    "IsoWeek": 13,
+    "IsoDay": 4,
+    "StartHour": 15,
+    "EndHour": 18,
+    "RoomId": 1,
+    "Participants": "Louise Falk (LF)",
+    "Note": ""
+  }
+]
