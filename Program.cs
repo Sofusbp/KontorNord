@@ -5,8 +5,10 @@
 		using System;
 		using System.Collections.Generic; // for List<>
 		using System.Globalization; // til ISOWeek
-		using System.Linq; // for Where, OrderBy, FirstOrDefault
 		using System.IO; // for File I/O hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
+		using System.Linq; // for Where, OrderBy, FirstOrDefault
+        using System.Reflection;
+        using System.Runtime.Intrinsics.X86;
 		using System.Text.Json; // for JSON serialization hvis vi skulle gemme møderne i en fil (ikke implementeret endnu)
 
 		internal class Program
@@ -16,18 +18,20 @@
 			static void Main(string[] args)
 			{
 				Console.OutputEncoding = System.Text.Encoding.UTF8; // for at kunne bruge pile-symboler i menuen og ÆØÅ
-				Console.Title = "♥ Bookingsystem - KontorNord ♥"; // Titel på konsol-vinduet <3 ELSKER
+				Console.Title = "♥ Bookingsystem - KontorNord ♥"; // Titel på konsol-vinduet <3 
 				Console.ResetColor();
 
-				int width = Math.Min(150, Console.LargestWindowWidth);
-				int height = Console.LargestWindowHeight - 2;
-				Console.SetBufferSize(width, height);
-				Console.SetWindowSize(width, height);
 
-				string workerID = "";
-				string name = "";
-				string password = "";
-				bool isValidLogin = false;
+				// Konsol-indstillinger for at gøre det pænere og mere brugervenligt, uden dette åbnes konsollen i en for lille størrelse, som gør at fx uge grid og andre informationer ikke kan tilgås.
+				int width = Math.Min(150, Console.LargestWindowWidth); // Sætter bredden på konsol-vinduet, ved at tage den største bredde og sætte et max på 150 for at undgå at det bliver alt for bredt.
+				int height = Console.LargestWindowHeight - 2; // Sætter højden på konsol - vinduet, ved at tage den største højde og trække 2 fra for at undgå scroll - bar i bunden.Højden kan ikke sættes statisk, da det afhænger af brugerens skærmopløsning.
+				Console.SetBufferSize(width, height); // Sætter buffer-størrelsen til samme som vinduesstørrelsen, for at undgå scroll-bar i bunden og siden.
+				Console.SetWindowSize(width, height); // Sætter vinduesstørrelsen til den tidligere definerede bredde og højde. Det er vigtigt at sætte buffer-størrelsen før vinduesstørrelsen, for at undgå fejl i konsollen.
+
+				string workerID = "";    // Gemmer det medarbejder ID som brugeren indtaster				 
+				string name = "";        // Gemmer medarbejderens fulde navn, som senere bruges i velkomstbeskeden.
+				string password = "";    // Gemmer adgangskoden som brugeren indtaster
+				bool isValidLogin = false; // Der bruges en boolean der bestemmer om login er godkendt. Så længe den er false, så kører login loopet videre.
 
 				while (!isValidLogin) // Så længe der ikke kommer et "ValidLogin" kører loopet videre og brugeren kan forsøge igen.
 				{
@@ -46,6 +50,7 @@
 					// Selve WorkerID godkendelsen - der er brugt de to første initialer i fornavn og et inital i efternavn.
 					// Adgangskoden er lavet omvendt af WorkerID - så de samme initialer blot baglæns.
 					// Hvis WorkerID er korrekt vil den spørge om en adgangskode og hvis den også er korrekt kommer man videre ind til velkommen. Hvis ikke koden eller workerid er korrekt, kan man prøve igen.
+
 					if (workerID == "SOM")
 					{
 						name = "Sofie Møller";
@@ -166,7 +171,7 @@
 				{
 					Console.Clear();
 					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine($"===== Welcome, {workerID} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
+					Console.WriteLine($"===== Welcome, {name} ====="); // Det første man ser efter log-in - Indsæt $ når workerID er sat op (interpolation)
 					Console.ResetColor();
 					Console.WriteLine(""); // Lidt spacing
 					Console.WriteLine($"Aktuelt lokale: {rooms[selectedRoomIndex].Name}");
@@ -211,13 +216,22 @@
 									break;
 								}
 
-								bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);
+
+
+								bool isConfirmed = ConfirmMeeting(newMeeting, selectedRoom);  // bool isConfirmed tager return værdien fra ConfirmMeeting metoden som tager 2 parametere,
+																							  // som er enten true eller false, alt efter om brugeren bekræfter mødet eller ej.
+																							  // if()
+																							  // Hvis isConfirmed ==true, så viser det en bekræftelse af mødet beskeden 
+																							  // og newMeetings er tilføjet til .meetings listen og gemt. Så mødet er oprettet og bekræftet.                                     
+																							  // else
+																					      	  // Hvis isConfirmed == false, så vise det beskeden som (Console.Writeline())
+																						      //Brugeren kommer tilbage til menuen uden at gemme mødet.
 
 								if (isConfirmed)
 								{
-									Console.WriteLine("Mødet er bekræftet.");
-									meetings.Add(newMeeting);
-									SaveMeetings(meetings);
+									Console.WriteLine("Mødet er bekræftet."); // denne besked bliver ikke vist i det nuværende flow, da ConfirmMeeting-metoden også spørger om bekræftelse
+									meetings.Add(newMeeting);  // Tilføjer det nye møde til listen over møder som gemmes i programmet. Det er vigtigt at dette sker EFTER bekræftelsen, så mødet ikke bliver gemt hvis brugeren fortryder i bekræftelses-steget.
+									SaveMeetings(meetings);	  // Gemmer møderne i JSON-filen ved at kalde på SaveMeetings-metoden.
 									Console.ForegroundColor = ConsoleColor.Blue;
 									Console.WriteLine();
 									Console.WriteLine("Mødet er nu oprettet.");
@@ -264,7 +278,7 @@
 				Console.Write("Vælg nummer og afslut med <Enter>: ");
 			}
 
-			static void CalendarLoop(List<Meeting> meetings, List<MeetingRoom> rooms, ref int isoYear, ref int isoWeek, ref int selectedRoomIndex)
+			static void CalendarLoop(List<Meeting> meetings, List<MeetingRoom> rooms, ref int isoYear, ref int isoWeek, ref int selectedRoomIndex) // Metode der håndterer hoved-loopet for kalenderen, hvor møder vises og brugeren kan navigere mellem uger og lokaler
 			{
 				while (true)
 				{
@@ -322,7 +336,12 @@
 								break;
 							}
 
-						case ConsoleKey.N:
+						case ConsoleKey.N:  // Her kalder vi metoden: ConfirmMeeting som tager newMeeting og selectedRoom som parametre.
+											// Bool bruges til at tjekke om mødet skal gemmes eller ej. 
+											// Hvis isConfirmed == true, så bliver newMeeting tilføjet til meetings listen og gemt i JSON filen.
+											// Hvis isConfirmed == false, så vises en besked via (Console.Writeline("Mødet er ikke bekræftet....))
+										    // hvor efter brugeren kommer tilbage til menuen uden at gemme mødet.
+											
 							{
 								Meeting? newMeeting = BookMeetingFlow(isoYear, isoWeek, selectedRoom);
 
@@ -481,22 +500,22 @@
 								.OrderBy(m => m.StartHour)
 								.FirstOrDefault();
 
-							if (meeting != null)
+							if (meeting != null) // Tjekker om der findes et møde i den aktuelle celle i kalenderen
 							{
 								Console.BackgroundColor = ConsoleColor.Blue; //Gør farven på et booket møde til blå
 
-								string cellText;
-								if (innerLine == 0)
-									cellText = $"{meeting.TimeRangeText()}  {selectedRoom.Name}";
-								else
-									cellText = $"{meeting.Participants} | {meeting.Note}";
+								string cellText; // Variabel der skal indeholde teksten der vises i kalendercellen
+								if (innerLine == 0) // Hvis det er første linje i cellen (IndexStart == 0)
+									cellText = $"{meeting.TimeRangeText()}  {selectedRoom.Name}"; // Viser mødetid og mødelokalets navn
+								else // Hvis det er anden linje i cellen
+									cellText = $"{meeting.Participants} | {meeting.Note}"; // Viser deltagere og eventuel note til mødet
 
-								Console.Write(cellText.PadRight(dayColWidth) + "|");
+								Console.Write(cellText.PadRight(dayColWidth) + "|"); // Udskriver teksten og fylder resten af cellens bredde med mellemrum
 								Console.ResetColor();
 							}
-							else
+							else // Hvis der ikke findes et møde i denne celle
 							{
-								Console.Write("".PadRight(dayColWidth) + "|");
+								Console.Write("".PadRight(dayColWidth) + "|"); // Udskriver en tom celle med samme bredde som de andre
 							}
 						}
 						Console.WriteLine();
@@ -533,7 +552,7 @@
 				return newMeeting;
 			}
 
-			static Meeting BuildMeetingFromBookingFlow(int isoYear, int isoWeek, MeetingRoom selectedRoom, string day, int startHour, int endHour, List<string> participants, string note)
+			static Meeting BuildMeetingFromBookingFlow(int isoYear, int isoWeek, MeetingRoom selectedRoom, string day, int startHour, int endHour, List<string> participants, string note) // Metode der opretter et Meeting-objekt ud fra booking-flowets input
 			{
 				Meeting m = new Meeting();
 				m.IsoYear = isoYear;
@@ -545,7 +564,7 @@
 				m.Participants = string.Join(", ", participants);
 				m.Note = note;
 
-				return m;
+				return m; // Returnerer det færdige Meeting-objekt
 			}
 
 			static int DayNameToIsoDay(string day)
@@ -562,8 +581,15 @@
 			}
 
 
-			//Yukari
-			static bool ConfirmMeeting(Meeting meeting, MeetingRoom selectedRoom)
+			
+			static bool ConfirmMeeting(Meeting meeting, MeetingRoom selectedRoom)  
+																					// ConfirmMeeting er en metode der returnerer bool som datatype.
+																					// Den tager en Meeting og et MeetingRoom som parametre.
+																					// Den kalder MeetingConfirmation metoden for at vise en besked om bekræftelse af mødet .
+																					// OSB: Navngivningen er lidt forvirrende, men MeetingConfirmation er metoden der viser bekræftelses beskeden.
+																					// ConfirmMeeting er metoden der returnerer bool og både viser bekræftelses beskeden via MeetingConfirmation
+																					// og spørger brugeren om de vil bekræfte mødet eller ej, og så returnerer true/false alt efter svaret før retur til menu .
+																					
 			{
 				MeetingConfirmation(meeting, selectedRoom);
 				Console.ForegroundColor = ConsoleColor.Red;
@@ -571,7 +597,16 @@
 				Console.ResetColor();
 				string input = Console.ReadLine();
 
-				while (true)
+				while (true)                                                        // While-loop , der kører og tjekker indtil brugeren skriver "ja" eller "nej". 
+																					// "ja", "nej" er case insensitive med build-in enum :Equals(StringComparison.OrdinalIgnoreCase
+																					// if ()
+																					// Hvis "ja", returneres true og mødet bliver bekræftet.
+																					// Se i Main-metoden while (isRunning), case 2 , if sætningen, hvor det tjekkes om isConfirmed == true, og så bliver mødet tilføjet til listen og gemt meetings listen.
+																					// else if ()
+																					// Hvis false "nej", returneres false og mødet bliver ikke bekræftet. 
+																					// else
+																					// Hvis andet, så får brugeren en fejlbesked og kan prøve igen.
+																					
 				{
 					if (input.Equals("ja", StringComparison.OrdinalIgnoreCase))
 					{
@@ -589,10 +624,9 @@
 						input = Console.ReadLine();
 					}
 				}
-
 			}
 
-			static void MeetingConfirmation(Meeting meeting, MeetingRoom selectedRoom)
+			static void MeetingConfirmation(Meeting meeting, MeetingRoom selectedRoom) // Metode, der giver info-display i form af gemte variabler i tidligere metoder
 			{
 				Console.Clear();
 
@@ -630,14 +664,14 @@
 				Console.Write("Vælg nummer og afslut med <Enter>: ");
 
 				int valg;
-				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > 5) // Out = At tasten bliver sendt ud i variablen: "valg"
+				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > 5) // Out = At tasten bliver sendt ud i variablen: "valg" -- Sikrer, at brugere ikke kan vælge et tal under 1 og over 5
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
 					Console.Write("Indtast venligst et tal: ");
 					Console.ResetColor();
 				}
 
-				switch (valg) // Her bruger jeg ikke "break", da jeg har "return" i min metode. "Return", får koden til at stoppe automatisk
+				switch (valg) // Her bruger jeg ikke "break", da jeg har "return" i switch. "Return", får koden til at stoppe automatisk
 				{
 					case 1: return "Mandag";
 					case 2: return "Tirsdag";
@@ -648,11 +682,11 @@
 				}
 			}
 
-			static int SelectStartTime()
+			static int SelectStartTime() // Metode, der lader brugeren vælge en dag, mødet skal afholdes
 			{
 				Console.Clear();
 
-				List<int> tider = new List<int>(); // Benytter en liste for at undgå mange cases i en switch
+				List<int> tider = new List<int>(); // Benytter en liste for at undgå mange cases i en switch -- Undgår senere for meget refactoring
 
 				Console.ForegroundColor = ConsoleColor.Yellow;
 				Console.WriteLine("============================");
@@ -666,22 +700,22 @@
 				for (int tid = 8; tid <= 17; tid++) // For Loop, der genererer forskellige tidspunkter
 				{
 					Console.WriteLine($"{mulighed}) {tid:00}:00");
-					tider.Add(tid);
+					tider.Add(tid); // Tilføjer list item
 					mulighed++; // Plusser med 1 for hver mulighed (en tæller)
 				}
 
 				Console.WriteLine("");
 				Console.Write("Vælg nummer og afslut med <Enter>: ");
 
-				int valg;
-				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > tider.Count)
+				int valg; // Opretter variablen 'valg', som skal gemme brugerens indtastede tal
+				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > tider.Count) // Kører en løkke indtil brugeren indtaster et gyldigt tal mellem 1 og antal tider
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
 					Console.Write("Indtast venligst et tal: ");
 					Console.ResetColor();
 				}
 
-				return tider[valg - 1];
+				return tider[valg - 1]; // - 1, da Index altid starter ved 0 (én forrige)
 			}
 
 			static int SelectEndTime(int startHour) // Basically en kopi af ovenstående metode, men bare som slut-tidspunkt i stedet
@@ -697,12 +731,12 @@
 				Console.ResetColor();
 				Console.WriteLine("");
 
-				for (int tid = startHour + 1; tid <= 18; tid++) // Sluttid skal være efter starttidspunktet
+				for (int tid = startHour + 1; tid <= 18; tid++) // For-løkke der opretter mulige sluttider efter starttidspunktet
 				{
-					tider.Add(tid);
+					tider.Add(tid); // Tilføjer tidspunktet til listen 'tider'
 				}
 
-				for (int i = 0; i < tider.Count; i++)
+				for (int i = 0; i < tider.Count; i++) // Løber gennem alle tider i listen for at vise dem som valgmuligheder
 				{
 					Console.WriteLine($"{i + 1}) {tider[i]:00}:00");
 				}
@@ -710,19 +744,19 @@
 				Console.WriteLine("");
 				Console.Write("Vælg nummer og afslut med <Enter>: ");
 
-				int valg;
+				int valg; // Variabel der gemmer brugerens valg
 
-				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > tider.Count)
+				while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > tider.Count) // Kører en løkke indtil brugeren indtaster et gyldigt tal mellem 1 og antal tider
 				{
 					Console.ForegroundColor = ConsoleColor.Red;
 					Console.Write($"Indtast et tal mellem 1 og {tider.Count}: ");
 					Console.ResetColor();
 				}
 
-				return tider[valg - 1];
+				return tider[valg - 1]; // Returnerer den valgte sluttid (minus 1 fordi liste-index starter ved 0)
 			}
 
-			static List<string> AddParticipants()
+			static List<string> AddParticipants() // Metode, der tillader brugeren at tilføje detlagere til mødet
 			{
 				Console.Clear();
 
@@ -735,7 +769,7 @@
 				Console.ResetColor();
 				Console.WriteLine("");
 
-				List<string> employees = new List<string>
+				List<string> employees = new List<string> // Liste, vi skriver mulige deltagere i
 			{
 				"Sofie Møller (SM)",
 				"Jonas Tved (JT)",
@@ -745,10 +779,8 @@
 				"Henrik Krøll (HK)",
 			};
 
-				char svar = 'j';
+				char svar = 'j'; // Hvis brugeren indtaster 'j' (ja), så fortsætter loopet
 
-				// Jeg mangler stadig at lave en char 'svarNej'
-				// Jeg mangler stadig logik for, at man ikke kan vælge samme deltager 2 gange
 
 				while (char.ToLower(svar) == 'j') // Hvis svaret er lig med 'j', så fortsætter loopet
 				{
@@ -760,7 +792,7 @@
 					Console.ResetColor();
 					Console.WriteLine("");
 
-					for (int i = 0; i < employees.Count; i++)
+					for (int i = 0; i < employees.Count; i++) // For-løkke der gennemløber alle medarbejdere i listen 'employees'
 					{
 						Console.WriteLine($"{i + 1}) {employees[i]}");
 					}
@@ -768,7 +800,7 @@
 					Console.WriteLine("");
 					Console.Write("Vælg en ansat og afslut med <Enter>: ");
 
-					int valg;
+					int valg; // Variabel der gemmer brugerens indtastede valg
 
 					while (!int.TryParse(Console.ReadLine(), out valg) || valg < 1 || valg > employees.Count) // Sikrer, at brugeren kun kan vælge mellem antallet af medarbejdere i Index
 					{
@@ -777,9 +809,9 @@
 						Console.ResetColor();
 					}
 
-					string valgtDeltager = employees[valg - 1];
+					string valgtDeltager = employees[valg - 1];  // Validerer input: sikrer at input er et tal og inden for listen employees
 
-					if (!participants.Contains(valgtDeltager))
+					if (!participants.Contains(valgtDeltager)) // Tjekker om deltageren allerede findes i listen 'participants'
 					{
 						participants.Add(valgtDeltager); // Tilføjer den valgte medarbejder til listen over mødedeltagere
 					}
@@ -792,7 +824,7 @@
 
 					Console.WriteLine("");
 					Console.Write("Vil du vælge flere ansatte til mødet? --- Svar: j/n: ");
-					svar = Console.ReadKey().KeyChar;
+					svar = Console.ReadKey().KeyChar; // Læser et enkelt tegn fra tastaturet og gemmer det i variablen 'svar'
 
 					Console.WriteLine("");
 				}
@@ -805,9 +837,9 @@
 				}
 
 				Console.WriteLine("Tryk på en tast for at fortsætte...");
-				Console.ReadKey(true);
+				Console.ReadKey(true); // Venter på et tastetryk før programmet fortsætter (true skjuler den tast brugeren trykker)
 
-				return participants;
+				return participants; // Returnerer listen med alle valgte deltagere til den metode der kaldte denne metode
 			}
 
 			static string AddNote() // Metode, der tillader en tilføjelse af en note
@@ -850,15 +882,15 @@
 				}
 			}
 
-			public class MeetingRoom
+			public class MeetingRoom // Definerer klassen MeetingRoom, som repræsenterer et mødelokale
 			{
-				public int Id;
-				public string Name = "";
-				public int Capacity;
+				public int Id; // Gemmer et unikt ID for mødelokalet
+				public string Name = ""; // Gemmer navnet på mødelokalet (initialiseret som tom tekst)
+				public int Capacity; // Gemmer hvor mange personer lokalet maksimalt kan rumme
 
 				public MeetingRoom() { } // parameterløs constructor så JSON og andre dele af programmet ikke brokker sig hvis vi senere vil gemme lokaler også
 
-				public MeetingRoom(int id, string name, int capacity)
+				public MeetingRoom(int id, string name, int capacity)  // Constructor der opretter et mødelokale med alle nødvendige værdier
 				{
 					Id = id;
 					Name = name;
@@ -866,25 +898,25 @@
 				}
 
 				// metode der tjekker om lokalet er ledigt i et bestemt tidsrum i en bestemt uge/dag
-				public bool IsAvailable(List<Meeting> meetings, int isoYear, int isoWeek, int isoDay, int startHour, int endHour)
+				public bool IsAvailable(List<Meeting> meetings, int isoYear, int isoWeek, int isoDay, int startHour, int endHour)  // Metode der tjekker om mødelokalet er ledigt i et bestemt tidsrum
 				{
-					foreach (Meeting meeting in meetings)
+					foreach (Meeting meeting in meetings) // Gennemløber alle møder i listen 'meetings'
 					{
-						if (meeting.RoomId == Id &&
-							meeting.IsoYear == isoYear &&
-							meeting.IsoWeek == isoWeek &&
-							meeting.IsoDay == isoDay)
+						if (meeting.RoomId == Id && // Tjekker om mødet foregår i dette mødelokale
+							meeting.IsoYear == isoYear && // Tjekker om mødet er i samme år
+							meeting.IsoWeek == isoWeek && // Tjekker om mødet er i samme uge
+							meeting.IsoDay == isoDay) // Tjekker om mødet er på samme dag
 						{
-							bool overlap = startHour < meeting.EndHour && endHour > meeting.StartHour;
+							bool overlap = startHour < meeting.EndHour && endHour > meeting.StartHour; // Undersøger om det ønskede tidsrum overlapper med et eksisterende møde
 
-							if (overlap)
+							if (overlap) // Hvis tiderne overlapper
 							{
-								return false;
+								return false;  // Returnerer false fordi lokalet ikke er ledigt
 							}
 						}
 					}
 
-					return true;
+					return true;  // Returnerer true hvis der ikke blev fundet nogen overlappende møder
 				}
 			}
 
@@ -921,15 +953,15 @@
 			}
 
 			//  Aflysning
-			static void CancelFlow(List<Meeting> meetings, int isoYear, int isoWeek, MeetingRoom selectedRoom) // metode der håndterer hele flowet for at aflyse et møde
+			static void CancelFlow(List<Meeting> meetings, int isoYear, int isoWeek, MeetingRoom selectedRoom)  // Metode der håndterer hele processen for at aflyse et møde
 			{
 				Console.Clear();
 
-				var weekMeetings = meetings
-					.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek && m.RoomId == selectedRoom.Id)
-					.OrderBy(m => m.IsoDay)
-					.ThenBy(m => m.StartHour)
-					.ToList();
+				var weekMeetings = meetings  // Opretter en variabel der skal indeholde filtrerede møder
+					.Where(m => m.IsoYear == isoYear && m.IsoWeek == isoWeek && m.RoomId == selectedRoom.Id) // Filtrerer møder så kun dem fra valgt år, uge og lokale medtages
+					.OrderBy(m => m.IsoDay) // Sorterer møderne efter hvilken dag i ugen de ligger
+					.ThenBy(m => m.StartHour) // Sorterer derefter møderne efter starttidspunkt
+					.ToList(); // Konverterer resultatet til en liste
 
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine("AFLYS MØDE");
@@ -938,19 +970,19 @@
 				Console.WriteLine($"Valgt mødelokale: {selectedRoom.Name}");
 				Console.WriteLine();
 
-				if (weekMeetings.Count == 0)
+				if (weekMeetings.Count == 0) // Tjekker om listen med ugens møder er tom
 				{
-					Console.WriteLine("Der er ingen møder at aflyse i denne uge for dette lokale. Tryk på en tast for at gå tilbage...");
-					Console.ReadKey(true);
-					return;
+					Console.WriteLine("Der er ingen møder at aflyse i denne uge for dette lokale. Tryk på en tast for at gå tilbage..."); 
+					Console.ReadKey(true);  // Venter på et tastetryk før programmet fortsætter
+					return; // Afslutter metoden og går tilbage hvis der ikke findes møder at aflyse
 				}
 
 				DateTime monday = ISOWeek.ToDateTime(isoYear, isoWeek, DayOfWeek.Monday); // find datoen for mandagen i den uge vi kigger på
 
-				for (int i = 0; i < weekMeetings.Count; i++)
+				for (int i = 0; i < weekMeetings.Count; i++) // For-løkke der gennemløber alle møder i listen weekMeetings
 				{
-					var m = weekMeetings[i];
-					DateTime meetingDate = monday.AddDays(m.IsoDay - 1);
+					var m = weekMeetings[i];  // Henter det aktuelle møde fra listen
+					DateTime meetingDate = monday.AddDays(m.IsoDay - 1);  // Beregner den præcise dato for mødet ved at lægge dag-forskellen til mandagen
 
 					Console.ForegroundColor = ConsoleColor.Blue;
 					Console.WriteLine($"{i + 1}. {meetingDate:dd/MM}  {m.TimeRangeText()}  Lokale: {selectedRoom.Name}  Deltagere: {m.Participants}  Note: {m.Note}");
@@ -962,29 +994,29 @@
 				Console.Write("Vælg nummer der skal slettes (Enter for at annullere): ");
 				Console.ResetColor();
 
-				string input = Console.ReadLine() ?? "";
-				if (string.IsNullOrWhiteSpace(input))
-					return;
+				string input = Console.ReadLine() ?? ""; // Læser brugerens input fra konsollen, eller sætter tom tekst hvis input er null
+				if (string.IsNullOrWhiteSpace(input)) // Tjekker om input er tomt eller kun indeholder mellemrum
+					return; // Afslutter metoden hvis brugeren ikke har indtastet noget
 
-				if (!int.TryParse(input, out int choice) || choice < 1 || choice > weekMeetings.Count)
+				if (!int.TryParse(input, out int choice) || choice < 1 || choice > weekMeetings.Count) // Validerer at input er et tal og inden for gyldigt interval
 				{
 					Console.WriteLine("Ugyldigt valg. Tryk en tast...");
 					Console.ReadKey(true);
 					return;
 				}
 
-				var target = weekMeetings[choice - 1];
+				var target = weekMeetings[choice - 1];  // Finder det valgte møde i listen (minus 1 fordi liste-index starter ved 0)
 
 				Console.WriteLine();
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.Write("Er du sikker? Tryk J for JA eller N for NEJ: ");
 				Console.ResetColor();
 
-				var confirmKey = Console.ReadKey(true).Key;
-				if (confirmKey == ConsoleKey.J)
+				var confirmKey = Console.ReadKey(true).Key; // Læser hvilken tast brugeren trykker (skjult i konsollen)
+				if (confirmKey == ConsoleKey.J)  // Tjekker om brugeren bekræfter med tasten 'J'
 				{
-					meetings.Remove(target);
-					SaveMeetings(meetings);
+					meetings.Remove(target); // Fjerner det valgte møde fra listen 'meetings'
+					SaveMeetings(meetings);  // Gemmer den opdaterede mødeliste efter sletningen
 
 					Console.WriteLine();
 					Console.WriteLine("Følgende møde er slettet: ");
@@ -1004,34 +1036,34 @@
 				}
 			}
 
-			static void SaveMeetings(List<Meeting> meetings)
+			static void SaveMeetings(List<Meeting> meetings) // Metode der gemmer alle møder til en JSON-fil
 			{
-				var options = new JsonSerializerOptions
+				var options = new JsonSerializerOptions  // Opretter konfigurationsindstillinger til JSON-serialisering
 				{
-					WriteIndented = true,
-					IncludeFields = true
+					WriteIndented = true, // Gør JSON-filen pænt formateret og lettere at læse
+					IncludeFields = true // Sikrer at klassens fields også bliver gemt i JSON
 				};
 
-				string json = JsonSerializer.Serialize(meetings, options);
-				File.WriteAllText(filePath, json);
+				string json = JsonSerializer.Serialize(meetings, options); // Konverterer listen af møder til en JSON-string
+				File.WriteAllText(filePath, json); // Skriver JSON-dataen til filen på den angivne filsti
 			}
 
-			static List<Meeting> LoadMeetings()
+			static List<Meeting> LoadMeetings()  // Metode der indlæser møder fra JSON-filen
 			{
-				if (!File.Exists(filePath))
+				if (!File.Exists(filePath)) // Tjekker om filen eksisterer
 				{
-					return new List<Meeting>();
+					return new List<Meeting>(); // Returnerer en tom liste hvis filen ikke findes endnu
 				}
 
-				var options = new JsonSerializerOptions
+				var options = new JsonSerializerOptions // Opretter konfigurationsindstillinger til JSON-deserialisering
 				{
-					IncludeFields = true
+					IncludeFields = true // Sikrer at fields også læses korrekt fra JSON
 				};
 
-				string json = File.ReadAllText(filePath);
-				List<Meeting>? meetings = JsonSerializer.Deserialize<List<Meeting>>(json, options);
+				string json = File.ReadAllText(filePath); // Læser hele JSON-filen ind som tekst
+				List<Meeting>? meetings = JsonSerializer.Deserialize<List<Meeting>>(json, options); // Konverterer JSON-tekst til en liste af Meeting-objekter
 
-				return meetings ?? new List<Meeting>();
+				return meetings ?? new List<Meeting>(); // Returnerer listen, eller en tom liste hvis deserialisering fejlede
 			}
 		}
 	}
